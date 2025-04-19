@@ -391,10 +391,18 @@ const BookDetails = () => {
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Just show some random books for now */}
-              {books
-                .filter((b) => b.id !== book.id)
-                .slice(0, 3)
-                .map((relatedBook) => (
+              {[...Array(3)].map((_, i) => {
+                // Create a dummy related book based on current book
+                const relatedBook = {
+                  id: `related-${i}`,
+                  title: `Similar to ${book.title} #${i+1}`,
+                  author: book.author,
+                  coverImage: book.coverImage,
+                  avgRating: (book.avgRating * 0.8 + Math.random() * 0.4).toFixed(1),
+                  description: book.description
+                };
+                
+                return (
                   <Card key={relatedBook.id} className="overflow-hidden">
                     <div className="p-4 flex items-start space-x-4">
                       <Link
@@ -420,18 +428,19 @@ const BookDetails = () => {
                         </p>
                         <div className="flex items-center">
                           <StarRating
-                            rating={relatedBook.avgRating}
+                            rating={Number(relatedBook.avgRating)}
                             readOnly
                             size="sm"
                           />
                           <span className="ml-2 text-xs text-muted-foreground">
-                            {relatedBook.avgRating.toFixed(1)}
+                            {relatedBook.avgRating}
                           </span>
                         </div>
                       </div>
                     </div>
                   </Card>
-                ))}
+                );
+              })}
             </div>
           </TabsContent>
         </Tabs>
