@@ -44,6 +44,20 @@ const Profile = () => {
     }).format(date);
   };
 
+  // Check if shelves exist and have books
+  const hasBooks = (shelfType: string): boolean => {
+    if (!shelves) return false;
+    const shelf = shelves.find((shelf) => shelf.type === shelfType);
+    return shelf ? shelf.books.length > 0 : false;
+  };
+
+  // Get books for a specific shelf
+  const getShelfBooks = (shelfType: string) => {
+    if (!shelves) return [];
+    const shelf = shelves.find((shelf) => shelf.type === shelfType);
+    return shelf ? shelf.books : [];
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
@@ -95,6 +109,33 @@ const Profile = () => {
                 </Button>
               </CardContent>
             </Card>
+            
+            <Card className="mt-6">
+              <CardContent className="p-6">
+                <h2 className="text-lg font-semibold mb-4">My Shelves Summary</h2>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span>Currently reading</span>
+                    <span className="text-muted-foreground">{getShelfBooks("reading").length} books</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Read</span>
+                    <span className="text-muted-foreground">{getShelfBooks("read").length} books</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Want to read</span>
+                    <span className="text-muted-foreground">{getShelfBooks("want-to-read").length} books</span>
+                  </div>
+                </div>
+                <Button 
+                  variant="outline" 
+                  className="w-full mt-4"
+                  onClick={() => navigate("/shelves")}
+                >
+                  View All Shelves
+                </Button>
+              </CardContent>
+            </Card>
           </div>
           
           {/* Bookshelves */}
@@ -129,67 +170,82 @@ const Profile = () => {
               ) : (
                 <>
                   <TabsContent value="reading" className="mt-6">
-                    {shelves?.find((shelf) => shelf.type === "reading")?.books.length ? (
+                    {hasBooks("reading") ? (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
-                        {shelves
-                          .find((shelf) => shelf.type === "reading")
-                          ?.books.map((book) => (
-                            <BookCard
-                              key={book.id}
-                              book={book}
-                              onClick={() => navigateToBook(book.id)}
-                            />
-                          ))}
+                        {getShelfBooks("reading").map((book) => (
+                          <BookCard
+                            key={book.id}
+                            book={book}
+                            onClick={() => navigateToBook(book.id)}
+                          />
+                        ))}
                       </div>
                     ) : (
                       <div className="p-4 text-center">
                         <p className="text-muted-foreground">
                           You don't have any books marked as currently reading.
                         </p>
+                        <Button 
+                          variant="outline" 
+                          className="mt-4"
+                          onClick={() => navigate("/")}
+                        >
+                          Browse Books
+                        </Button>
                       </div>
                     )}
                   </TabsContent>
 
                   <TabsContent value="read" className="mt-6">
-                    {shelves?.find((shelf) => shelf.type === "read")?.books.length ? (
+                    {hasBooks("read") ? (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
-                        {shelves
-                          .find((shelf) => shelf.type === "read")
-                          ?.books.map((book) => (
-                            <BookCard
-                              key={book.id}
-                              book={book}
-                              onClick={() => navigateToBook(book.id)}
-                            />
-                          ))}
+                        {getShelfBooks("read").map((book) => (
+                          <BookCard
+                            key={book.id}
+                            book={book}
+                            onClick={() => navigateToBook(book.id)}
+                          />
+                        ))}
                       </div>
                     ) : (
                       <div className="p-4 text-center">
                         <p className="text-muted-foreground">
                           You don't have any books marked as read.
                         </p>
+                        <Button 
+                          variant="outline" 
+                          className="mt-4"
+                          onClick={() => navigate("/")}
+                        >
+                          Browse Books
+                        </Button>
                       </div>
                     )}
                   </TabsContent>
 
                   <TabsContent value="want-to-read" className="mt-6">
-                    {shelves?.find((shelf) => shelf.type === "want-to-read")?.books.length ? (
+                    {hasBooks("want-to-read") ? (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
-                        {shelves
-                          .find((shelf) => shelf.type === "want-to-read")
-                          ?.books.map((book) => (
-                            <BookCard
-                              key={book.id}
-                              book={book}
-                              onClick={() => navigateToBook(book.id)}
-                            />
-                          ))}
+                        {getShelfBooks("want-to-read").map((book) => (
+                          <BookCard
+                            key={book.id}
+                            book={book}
+                            onClick={() => navigateToBook(book.id)}
+                          />
+                        ))}
                       </div>
                     ) : (
                       <div className="p-4 text-center">
                         <p className="text-muted-foreground">
                           You don't have any books marked as want to read.
                         </p>
+                        <Button 
+                          variant="outline" 
+                          className="mt-4"
+                          onClick={() => navigate("/")}
+                        >
+                          Browse Books
+                        </Button>
                       </div>
                     )}
                   </TabsContent>

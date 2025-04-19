@@ -43,6 +43,13 @@ const Shelves = () => {
   const navigateToBook = (bookId: string) => {
     navigate(`/books/${bookId}`);
   };
+  
+  // Helper function to get books from a specific shelf
+  const getShelfBooks = (shelfType: string) => {
+    if (!shelves) return [];
+    const shelf = shelves.find((shelf) => shelf.type === shelfType);
+    return shelf?.books || [];
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -86,18 +93,15 @@ const Shelves = () => {
           ) : (
             <>
               <TabsContent value="reading" className="mt-8">
-                {shelves?.find((shelf) => shelf.type === "reading")?.books
-                  .length ? (
+                {getShelfBooks("reading").length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                    {shelves
-                      .find((shelf) => shelf.type === "reading")
-                      ?.books.map((book) => (
-                        <BookCard
-                          key={book.id}
-                          book={book}
-                          onClick={() => navigateToBook(book.id)}
-                        />
-                      ))}
+                    {getShelfBooks("reading").map((book) => (
+                      <BookCard
+                        key={book.id}
+                        book={book}
+                        onClick={() => navigateToBook(book.id)}
+                      />
+                    ))}
                   </div>
                 ) : (
                   <Card className="text-center">
@@ -117,18 +121,15 @@ const Shelves = () => {
               </TabsContent>
 
               <TabsContent value="read" className="mt-8">
-                {shelves?.find((shelf) => shelf.type === "read")?.books
-                  .length ? (
+                {getShelfBooks("read").length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                    {shelves
-                      .find((shelf) => shelf.type === "read")
-                      ?.books.map((book) => (
-                        <BookCard
-                          key={book.id}
-                          book={book}
-                          onClick={() => navigateToBook(book.id)}
-                        />
-                      ))}
+                    {getShelfBooks("read").map((book) => (
+                      <BookCard
+                        key={book.id}
+                        book={book}
+                        onClick={() => navigateToBook(book.id)}
+                      />
+                    ))}
                   </div>
                 ) : (
                   <Card className="text-center">
@@ -148,18 +149,15 @@ const Shelves = () => {
               </TabsContent>
 
               <TabsContent value="want-to-read" className="mt-8">
-                {shelves?.find((shelf) => shelf.type === "want-to-read")?.books
-                  .length ? (
+                {getShelfBooks("want-to-read").length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                    {shelves
-                      .find((shelf) => shelf.type === "want-to-read")
-                      ?.books.map((book) => (
-                        <BookCard
-                          key={book.id}
-                          book={book}
-                          onClick={() => navigateToBook(book.id)}
-                        />
-                      ))}
+                    {getShelfBooks("want-to-read").map((book) => (
+                      <BookCard
+                        key={book.id}
+                        book={book}
+                        onClick={() => navigateToBook(book.id)}
+                      />
+                    ))}
                   </div>
                 ) : (
                   <Card className="text-center">
