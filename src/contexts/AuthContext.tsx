@@ -1,61 +1,65 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User } from "@/types";
-import { api } from "@/services/api";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { Session } from "@supabase/supabase-js";
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        // Check for stored user in localStorage
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
-        } else {
-          // For demo purposes, auto-login with the first user
-          const currentUser = await api.getCurrentUser();
-          setUser(currentUser);
-          localStorage.setItem("user", JSON.stringify(currentUser));
-        }
-      } catch (error) {
-        console.error("Authentication initialization error:", error);
-      } finally {
-        setIsLoading(false);
-      }
+    // Check initial session
+    const checkSession = async () => {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      setSession(currentSession);
+      setUser(currentSession?.user ? mapSupabaseUser(currentSession.user) : null);
+      setIsLoading(false);
     };
 
-    initAuth();
+    checkSession();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      setSession(currentSession);
+      setUser(currentSession?.user ? mapSupabaseUser(currentSession.user) : null);
+    });
+
+    // Cleanup subscription
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const loggedInUser = await api.login(email, password);
-      setUser(loggedInUser);
-      localStorage.setItem("user", JSON.stringify(loggedInUser));
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) throw error;
+
       toast({
         title: "Login successful",
-        description: `Welcome back, ${loggedInUser.name}!`,
+        description: "Welcome back!",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Login failed",
-        description: "Invalid email or password",
+        description: error.message,
         variant: "destructive",
       });
       throw error;
@@ -67,17 +71,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const register = async (name: string, email: string, password: string) => {
     setIsLoading(true);
     try {
-      const newUser = await api.register(name, email, password);
-      setUser(newUser);
-      localStorage.setItem("user", JSON.stringify(newUser));
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+          }
+        }
+      });
+
+      if (error) throw error;
+
       toast({
         title: "Registration successful",
-        description: `Welcome to Page Turner, ${newUser.name}!`,
+        description: "Welcome to Page Turner!",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Registration failed",
-        description: "Could not create account, please try again",
+        description: error.message,
         variant: "destructive",
       });
       throw error;
@@ -86,17 +99,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out",
-    });
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Logout failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
+  // Map Supabase user to our User type
+  const mapSupabaseUser = (supabaseUser: any): User => ({
+    id: supabaseUser.id,
+    name: supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || 'User',
+    email: supabaseUser.email || '',
+    avatar: supabaseUser.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(supabaseUser.user_metadata?.name || '')}`,
+    bio: supabaseUser.user_metadata?.bio || '',
+    createdAt: supabaseUser.created_at || new Date().toISOString(),
+  });
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, session, isLoading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

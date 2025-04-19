@@ -38,8 +38,8 @@ const Login = () => {
     try {
       await login(loginEmail, loginPassword);
       navigate("/");
-    } catch (error) {
-      setLoginError("Invalid email or password");
+    } catch (error: any) {
+      setLoginError(error.message || "Login failed");
     }
   };
 
@@ -61,8 +61,8 @@ const Login = () => {
     try {
       await register(registerName, registerEmail, registerPassword);
       navigate("/");
-    } catch (error) {
-      setRegisterError("Could not create account. Please try again.");
+    } catch (error: any) {
+      setRegisterError(error.message || "Registration failed");
     }
   };
 
