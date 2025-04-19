@@ -354,13 +354,13 @@ const BookDetails = () => {
                   <div key={review.id} className="border-b pb-6">
                     <div className="flex items-center mb-2">
                       <Avatar className="h-10 w-10 mr-3">
-                        <AvatarImage src={review.user.avatar} />
+                        <AvatarImage src={review.user?.avatar} />
                         <AvatarFallback>
-                          {review.user.name.charAt(0)}
+                          {review.user?.name ? review.user.name.charAt(0) : "U"}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h4 className="font-semibold">{review.user.name}</h4>
+                        <h4 className="font-semibold">{review.user?.name || "Anonymous"}</h4>
                         <p className="text-xs text-muted-foreground">
                           {formatDate(review.createdAt)}
                         </p>
