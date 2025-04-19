@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
@@ -18,6 +18,7 @@ const BookClubDetails = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [messageContent, setMessageContent] = useState("");
+  const [hasJoined, setHasJoined] = useState(false);
 
   // Fetch book club details
   const {
@@ -29,6 +30,24 @@ const BookClubDetails = () => {
     queryFn: () => api.getBookClubById(id!),
     enabled: !!id,
   });
+
+  // Fetch club members to check if user is a member
+  const {
+    data: members,
+    isLoading: isLoadingMembers,
+  } = useQuery({
+    queryKey: ["clubMembers", id],
+    queryFn: () => api.getClubMembers(id!),
+    enabled: !!id && !!user,
+  });
+
+  // Check if user has already joined this club
+  useEffect(() => {
+    if (members && user) {
+      const userIsMember = members.some(member => member.userId === user.id);
+      setHasJoined(userIsMember);
+    }
+  }, [members, user]);
 
   // Fetch club messages
   const {
@@ -46,6 +65,8 @@ const BookClubDetails = () => {
     mutationFn: () => api.joinBookClub(id!, user!.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["club", id] });
+      queryClient.invalidateQueries({ queryKey: ["clubMembers", id] });
+      setHasJoined(true);
       toast({
         title: "Joined club",
         description: "You are now a member of this book club",
@@ -172,12 +193,18 @@ const BookClubDetails = () => {
                 </div>
               </div>
 
-              <Button
-                onClick={handleJoinClub}
-                disabled={joinClubMutation.isPending}
-              >
-                {joinClubMutation.isPending ? "Joining..." : "Join Club"}
-              </Button>
+              {hasJoined ? (
+                <Button variant="secondary" disabled>
+                  You're a member
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleJoinClub}
+                  disabled={joinClubMutation.isPending}
+                >
+                  {joinClubMutation.isPending ? "Joining..." : "Join Club"}
+                </Button>
+              )}
             </div>
 
             {/* Current Book */}
@@ -254,15 +281,15 @@ const BookClubDetails = () => {
                       {messages.map((message) => (
                         <div key={message.id} className="flex items-start">
                           <Avatar className="h-10 w-10 mr-3">
-                            <AvatarImage src={message.user.avatar} />
+                            <AvatarImage src={message.user?.avatar} />
                             <AvatarFallback>
-                              {message.user.name.charAt(0)}
+                              {message.user?.name ? message.user.name.charAt(0) : "U"}
                             </AvatarFallback>
                           </Avatar>
                           <div>
                             <div className="flex items-baseline">
                               <h4 className="font-semibold mr-2">
-                                {message.user.name}
+                                {message.user?.name || "Anonymous"}
                               </h4>
                               <span className="text-xs text-muted-foreground">
                                 {formatTime(message.createdAt)}

@@ -1,4 +1,3 @@
-
 import { Book, Review, BookClub, User, Shelf, Message, ShelfType } from "@/types";
 
 // Mock Users
@@ -219,6 +218,13 @@ const messages: Message[] = [
   },
 ];
 
+// Mock Club Members
+const clubMembers = [
+  { id: "1", clubId: "1", userId: "1" },
+  { id: "2", clubId: "1", userId: "2" },
+  { id: "3", clubId: "2", userId: "1" },
+];
+
 // Delay function to simulate network requests
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -283,10 +289,30 @@ export const api = {
     return bookClubs.find((club) => club.id === id);
   },
   
+  getClubMembers: async (clubId: string): Promise<{id: string, clubId: string, userId: string}[]> => {
+    await delay(700);
+    return clubMembers.filter((member) => member.clubId === clubId);
+  },
+  
   joinBookClub: async (clubId: string, userId: string): Promise<BookClub> => {
     await delay(900);
     const club = bookClubs.find((c) => c.id === clubId)!;
-    club.memberCount++;
+    
+    // Check if user is already a member
+    const isMember = clubMembers.some(m => m.clubId === clubId && m.userId === userId);
+    
+    if (!isMember) {
+      // Add to members list
+      clubMembers.push({
+        id: `${clubMembers.length + 1}`,
+        clubId,
+        userId
+      });
+      
+      // Increment member count
+      club.memberCount++;
+    }
+    
     return club;
   },
   
